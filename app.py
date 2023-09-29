@@ -11,8 +11,6 @@ from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn import metrics
 from sqlalchemy import Float
 
-
-
 app = Flask(__name__)
 app.secret_key = "Amo101"
 app.config['UPLOAD_DIRECTORY'] = 'uploads/'
@@ -96,8 +94,9 @@ def input():
         co = request.form['co']
         initial_Cdeg = 0
         initial_class = "no class"
-        
-        hm = metals(lat, long, cd, cr, ni, pb, zn, cu, co)
+        print(initial_Cdeg)
+
+        hm = metals(lat, long, cd, cr, ni, pb, zn, cu, co, initial_Cdeg, initial_class)
         db.session.add(hm)
         db.session.commit()
 
@@ -114,8 +113,8 @@ def view():
     X = dataset.iloc[:, 2:].values
 
     #PREDICTION
-    class_prediction = ann_c.predict(X)
-    y_predicted_classes = np.argmax(class_prediction, axis=1)
+    class_y = ann_c.predict(X)
+    y_predicted_classes = np.argmax(class_y, axis=1)
     print(y_predicted_classes)
     decoded_predicted_classes = class_encoder.inverse_transform(y_predicted_classes)
     print(decoded_predicted_classes)
@@ -124,15 +123,33 @@ def view():
     #print(reg_prediction)
 
     #UPDATE THE PREDICTED VALUES IN DATABASE
-    predicted_values = db.session.query(metals.predicted_mCdeg).all()
-    for i, record in enumerate(predicted_values):
-        #record = reg_prediction[i][0]
-        #string_data = str(record)
-        print(record)
+    # add regression values 
+    new_values = {}
+    n= 1
+    for i, value in enumerate(reg_prediction):
+        each_value = str(value[0])
+        new_values[n] = each_value
+        n=n+1
 
-       # metals.query.update({metals.predicted_mCdeg: string_data})
-    #db.session.commit()
-    print(predicted_values)
+    for record_id, new_value in new_values.items():
+        record_to_update = metals.query.get(record_id)
+        if record_to_update:
+            record_to_update.predicted_mCdeg = new_value
+    db.session.commit()
+
+    # Add class values
+    class_values = {}
+    c=1
+    for class_ in decoded_predicted_classes:
+        class_values[c] = class_
+        c = c+1
+    #print(class_values)
+
+    for class_id, class_value in class_values.items():
+        class_to_update = metals.query.get(class_id)
+        if class_to_update:
+            class_to_update.predicted_class = class_value
+    db.session.commit()
     return render_template("view.html", values = values)
 
 #UPLOADING FILES
