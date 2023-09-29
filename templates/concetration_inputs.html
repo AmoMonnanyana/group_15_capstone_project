@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% block title %} Add Metal Concentrations{% endblock %}
+
+    {% block content %}
+    <form action="#" method="POST">
+        <input type="number" name="lat"/><br>
+        <input type="number" name="long"/><br>
+        <input type="number" name="cd"/><br>
+        <input type="number" name="cr"/><br>
+        <input type="number" name="ni"/><br>
+        <input type="number" name="pb"/><br>
+        <input type="number" name="zn"/><br>
+        <input type="number" name="cu"/><br>
+        <input type="number" name="co"/><br>
+
+        <input type="submit" value="Submit" /><br>
+    </form>
+    {% endblock %}
+</body>
+</html>
