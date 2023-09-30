@@ -9,7 +9,7 @@ import pandas as pd
 import csv
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from sklearn import metrics
-from sqlalchemy import Float
+from sqlalchemy import REAL
 
 app = Flask(__name__)
 app.secret_key = "Amo101"
@@ -24,15 +24,15 @@ app.app_context().push()
 
 class metals(db.Model):
         id= db.Column("id", db.Integer, primary_key=True)
-        lat = db.Column(Float)
-        long = db.Column(Float)
-        cd= db.Column(Float)
-        cr = db.Column(Float)
-        ni = db.Column(Float)
-        pb = db.Column(Float)
-        zn = db.Column(Float)
-        cu = db.Column(Float)
-        co = db.Column(Float)
+        lat = db.Column(REAL)
+        long = db.Column(REAL)
+        cd= db.Column(REAL)
+        cr = db.Column(REAL)
+        ni = db.Column(REAL)
+        pb = db.Column(REAL)
+        zn = db.Column(REAL)
+        cu = db.Column(REAL)
+        co = db.Column(REAL)
         predicted_mCdeg = db.Column(db.String())
         predicted_class = db.Column(db.String())
 
@@ -49,7 +49,32 @@ class metals(db.Model):
              self.predicted_mCdeg = predicted_mCdeg
              self.predicted_class = predicted_class
 
+class file_data(db.Model):
+        id= db.Column("id", db.Integer, primary_key=True)
+        lat = db.Column(REAL)
+        long = db.Column(REAL)
+        cd= db.Column(REAL)
+        cr = db.Column(REAL)
+        ni = db.Column(REAL)
+        pb = db.Column(REAL)
+        zn = db.Column(REAL)
+        cu = db.Column(REAL)
+        co = db.Column(REAL)
+        predicted_mCdeg = db.Column(db.String())
+        predicted_class = db.Column(db.String())
 
+        def __init__(self, lat, long, cd, cr, ni, pb, zn, cu, co, predicted_mCdeg, predicted_class):
+             self.lat = lat
+             self.long = long
+             self.cd = cd
+             self.cr = cr
+             self.ni = ni
+             self.pb = pb
+             self.zn = zn
+             self.cu = cu
+             self.co = co
+             self.predicted_mCdeg = predicted_mCdeg
+             self.predicted_class = predicted_class
 
 classes = ['very low contamination', 
            'low contamination', 
@@ -115,7 +140,7 @@ def view():
     #PREDICTION
     class_y = ann_c.predict(X)
     y_predicted_classes = np.argmax(class_y, axis=1)
-    print(y_predicted_classes)
+    print(class_y)
     decoded_predicted_classes = class_encoder.inverse_transform(y_predicted_classes)
     print(decoded_predicted_classes)
     print(X)
@@ -199,16 +224,25 @@ def read_file(new_file):
         final_set.append(list)
     dataset = pd.DataFrame(final_set, columns=["lat", "long", "cd", "cr", "ni", "pb", "zn", "cu", "co"])
     X = dataset.iloc[:, 2:].values
-    print(dataset)
     
     #PREDICTION
     class_prediction = ann_c.predict(X)
     y_predicted_classes = np.argmax(class_prediction, axis=1)
-    print(y_predicted_classes)
+    #print(y_predicted_classes)
     decoded_predicted_classes = class_encoder.inverse_transform(y_predicted_classes)
-    print(decoded_predicted_classes)
+    #print(decoded_predicted_classes)
     reg_prediction = ann_r.predict(X)
     print(reg_prediction)
+
+    dataset['predicted_mCdeg'] = reg_prediction
+    dataset['predicted_class'] = decoded_predicted_classes
+
+    
+    data_to_insert = dataset.to_dict(orient='records')
+    new_data = [file_data(**data) for data in data_to_insert]
+    db.session.add_all(new_data)
+    db.session.commit()
+
     return "Prediction successful!"
 
 @app.route("/predict/<input_data>")
