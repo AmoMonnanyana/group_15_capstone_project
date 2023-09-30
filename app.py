@@ -21,8 +21,33 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db= SQLAlchemy(app)
 app.app_context().push()
 
+#Tbale for input values prior to prediction
+class metal_inputs(db.Model):
+        id= db.Column("id", db.Integer, primary_key=True)
+        lat = db.Column(REAL)
+        long = db.Column(REAL)
+        cd= db.Column(REAL)
+        cr = db.Column(REAL)
+        ni = db.Column(REAL)
+        pb = db.Column(REAL)
+        zn = db.Column(REAL)
+        cu = db.Column(REAL)
+        co = db.Column(REAL)
+       
+        def __init__(self, lat, long, cd, cr, ni, pb, zn, cu, co):
+             self.lat = lat
+             self.long = long
+             self.cd = cd
+             self.cr = cr
+             self.ni = ni
+             self.pb = pb
+             self.zn = zn
+             self.cu = cu
+             self.co = co
 
-class metals(db.Model):
+
+#Table for input values with the associated results             
+class input_results(db.Model):
         id= db.Column("id", db.Integer, primary_key=True)
         lat = db.Column(REAL)
         long = db.Column(REAL)
@@ -35,7 +60,7 @@ class metals(db.Model):
         co = db.Column(REAL)
         predicted_mCdeg = db.Column(db.String())
         predicted_class = db.Column(db.String())
-
+        
         def __init__(self, lat, long, cd, cr, ni, pb, zn, cu, co, predicted_mCdeg, predicted_class):
              self.lat = lat
              self.long = long
@@ -48,7 +73,9 @@ class metals(db.Model):
              self.co = co
              self.predicted_mCdeg = predicted_mCdeg
              self.predicted_class = predicted_class
+             
 
+#Table for file upload data and the associated results
 class file_data(db.Model):
         id= db.Column("id", db.Integer, primary_key=True)
         lat = db.Column(REAL)
@@ -76,6 +103,8 @@ class file_data(db.Model):
              self.predicted_mCdeg = predicted_mCdeg
              self.predicted_class = predicted_class
 
+
+#Decoded classes based on ann_c model
 classes = ['very low contamination', 
            'low contamination', 
            'moderate contamination', 
@@ -88,7 +117,7 @@ class_encoder = LabelEncoder()
 encoded_classes = class_encoder.fit_transform(classes)
 print(encoded_classes)
 
-#load the model
+#Loading ann models
 try:
    ann_c = tf.keras.models.load_model("ml_models/ann-c_model.h5")
    ann_r=tf.keras.models.load_model("ml_models/ann-r_model.h5")
@@ -102,11 +131,10 @@ def home():
     return "home page"
 
 
-#Insert data to the database
+#INPUT DATA METHOD
 @app.route("/input", methods=['POST', 'GET'])
 def input():
     if request.method == 'POST':
-        
 
         lat = request.form['lat']
         long = request.form['long']
@@ -117,68 +145,48 @@ def input():
         zn = request.form['zn']
         cu = request.form['cu']
         co = request.form['co']
-        initial_Cdeg = 0
-        initial_class = "no class"
-        print(initial_Cdeg)
-
-        hm = metals(lat, long, cd, cr, ni, pb, zn, cu, co, initial_Cdeg, initial_class)
+        
+        hm = metal_inputs(lat, long, cd, cr, ni, pb, zn, cu, co)
         db.session.add(hm)
         db.session.commit()
-
-        return redirect (url_for("view"))
+        db.session.close()
+        
+        return redirect (url_for("process_data"))
     else:
         return render_template("concetration_inputs.html")
 
+@app.route("/process_data")
+def process_data():
+    inputs = metal_inputs.query.all()
+    data = [(value.lat, value.long, value.cd, value.cr, value.ni, value.pb, value.zn, value.cu, value.co) for value in inputs]
+    #print(data)
+    input_set = pd.DataFrame(data, columns=["lat", "long", "cd", "cr", "ni", "pb", "zn", "cu", "co"])
+    X = input_set.iloc[:, 2:].values
+    #print(X)
 
-@app.route("/view")
-def view():
-    values = metals.query.all()
-    data = [(val.lat, val.long, val.cd, val.cr, val.ni, val.pb, val.zn, val.cu, val.co) for val in values]
-    dataset = pd.DataFrame(data, columns=["lat", "long", "cd", "cr", "ni", "pb", "zn", "cu", "co"])
-    X = dataset.iloc[:, 2:].values
-
-    #PREDICTION
-    class_y = ann_c.predict(X)
-    y_predicted_classes = np.argmax(class_y, axis=1)
-    print(class_y)
+    class_prediction = ann_c.predict(X)
+    y_predicted_classes = np.argmax(class_prediction, axis=1)
+    #print(class_prediction)
     decoded_predicted_classes = class_encoder.inverse_transform(y_predicted_classes)
     print(decoded_predicted_classes)
-    print(X)
     reg_prediction = ann_r.predict(X)
-    #print(reg_prediction)
+    print(reg_prediction)
 
-    #UPDATE THE PREDICTED VALUES IN DATABASE
-    # add regression values 
-    new_values = {}
-    n= 1
-    for i, value in enumerate(reg_prediction):
-        each_value = str(value[0])
-        new_values[n] = each_value
-        n=n+1
+    input_set['predicted_mCdeg'] = reg_prediction
+    input_set['predicted_class'] = decoded_predicted_classes
+    print(input_set)
 
-    for record_id, new_value in new_values.items():
-        record_to_update = metals.query.get(record_id)
-        if record_to_update:
-            record_to_update.predicted_mCdeg = new_value
+    data_to_insert = input_set.to_dict(orient='records')
+    new_data = [input_results(**data) for data in data_to_insert]
+    db.session.add_all(new_data)
     db.session.commit()
+    db.session.close()
 
-    # Add class values
-    class_values = {}
-    c=1
-    for class_ in decoded_predicted_classes:
-        class_values[c] = class_
-        c = c+1
-    #print(class_values)
+    return "input data successful"
 
-    for class_id, class_value in class_values.items():
-        class_to_update = metals.query.get(class_id)
-        if class_to_update:
-            class_to_update.predicted_class = class_value
-    db.session.commit()
-    return render_template("view.html", values = values)
+    
 
-#UPLOADING FILES
-
+#UPLOADING FILES METHOD
 @app.route('/upload', methods=['POST', 'GET'])
 def upload():
     try:
@@ -242,6 +250,7 @@ def read_file(new_file):
     new_data = [file_data(**data) for data in data_to_insert]
     db.session.add_all(new_data)
     db.session.commit()
+    db.session.close()
 
     return "Prediction successful!"
 
@@ -253,6 +262,13 @@ def predict(input_data):
     print(type(inputs))
     return "prediction hanging"
 
+
+
 if __name__ == " __main__ ": 
     db.create_all()
     app.run(debug=True)
+
+
+#Query children of a parent(example)
+#parent = Parent.query.filter_by(name='John').first()
+#children = parent.children
