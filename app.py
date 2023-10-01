@@ -130,12 +130,14 @@ except Exception as e:
 def home():
     return "home page"
 
-
+method = ''
 #INPUT DATA METHOD
+
 @app.route("/input", methods=['POST', 'GET'])
 def input():
+    
     if request.method == 'POST':
-
+        
         lat = request.form['lat']
         long = request.form['long']
         cd = request.form['cd']
@@ -150,41 +152,53 @@ def input():
         db.session.add(hm)
         db.session.commit()
         db.session.close()
-        
+
+        input_status = request.form['input_status']
+        session['input_status'] =input_status
+
         return redirect (url_for("process_data"))
+             
     else:
+        session['input_status'] = ""
         return render_template("concetration_inputs.html")
 
+          
 @app.route("/process_data")
 def process_data():
-    inputs = metal_inputs.query.all()
-    data = [(value.lat, value.long, value.cd, value.cr, value.ni, value.pb, value.zn, value.cu, value.co) for value in inputs]
-    #print(data)
-    input_set = pd.DataFrame(data, columns=["lat", "long", "cd", "cr", "ni", "pb", "zn", "cu", "co"])
-    X = input_set.iloc[:, 2:].values
-    #print(X)
+        method='input'
+        if session['input_status'] == 'add_more':
+            return redirect(url_for("input"))
 
-    class_prediction = ann_c.predict(X)
-    y_predicted_classes = np.argmax(class_prediction, axis=1)
-    #print(class_prediction)
-    decoded_predicted_classes = class_encoder.inverse_transform(y_predicted_classes)
-    print(decoded_predicted_classes)
-    reg_prediction = ann_r.predict(X)
-    print(reg_prediction)
+        elif session['input_status'] == "done":
+            old_data = input_results.query.all()
+            for data_instance in old_data:
+                db.session.delete(data_instance)
 
-    input_set['predicted_mCdeg'] = reg_prediction
-    input_set['predicted_class'] = decoded_predicted_classes
-    print(input_set)
+            inputs = metal_inputs.query.all()
+            data = [(value.lat, value.long, value.cd, value.cr, value.ni, value.pb, value.zn, value.cu, value.co) for value in inputs]
+            #print(data)
+            input_set = pd.DataFrame(data, columns=["lat", "long", "cd", "cr", "ni", "pb", "zn", "cu", "co"])
+            X = input_set.iloc[:, 2:].values
+            #print(X)
 
-    data_to_insert = input_set.to_dict(orient='records')
-    new_data = [input_results(**data) for data in data_to_insert]
-    db.session.add_all(new_data)
-    db.session.commit()
-    db.session.close()
+            class_prediction = ann_c.predict(X)
+            y_predicted_classes = np.argmax(class_prediction, axis=1)
+            #print(class_prediction)
+            decoded_predicted_classes = class_encoder.inverse_transform(y_predicted_classes)
+            print(decoded_predicted_classes)
+            reg_prediction = ann_r.predict(X)
+            print(reg_prediction)
 
-    return "input data successful"
-
-    
+            input_set['predicted_mCdeg'] = reg_prediction
+            input_set['predicted_class'] = decoded_predicted_classes
+            print(input_set)
+            
+            data_to_insert = input_set.to_dict(orient='records')
+            new_data = [input_results(**data) for data in data_to_insert]
+            db.session.add_all(new_data)
+            db.session.commit()
+            db.session.close()
+            return redirect( url_for("view", mthd=method))
 
 #UPLOADING FILES METHOD
 @app.route('/upload', methods=['POST', 'GET'])
@@ -215,6 +229,12 @@ def upload():
 
 @app.route("/read_file/<new_file>")
 def read_file(new_file):
+    method='upload'
+
+    old_data = file_data.query.all()
+    for data_instance in old_data:
+        db.session.delete(data_instance)
+
     data = []
     filepath = f'uploads/{new_file}'
     with open(filepath) as file:
@@ -252,18 +272,18 @@ def read_file(new_file):
     db.session.commit()
     db.session.close()
 
-    return "Prediction successful!"
+    return redirect(url_for("view", mthd=method))
 
-@app.route("/predict/<input_data>")
-def predict(input_data):
-    inputs = np.array(input_data)
+@app.route("/view/<mthd>")
+def view(mthd):
+    if mthd == 'input':
+        results = input_results.query.all()
+    elif mthd == 'upload':
+         results = file_data.query.all()
+
+    return render_template('view.html', data=results)
+
     
-    #print(inputs)
-    print(type(inputs))
-    return "prediction hanging"
-
-
-
 if __name__ == " __main__ ": 
     db.create_all()
     app.run(debug=True)
