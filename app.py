@@ -126,13 +126,62 @@ try:
 except Exception as e:
     print(f"Error loading the model: {str(e)}")
 
-@app.route("/")
+@app.route("/home")
 def home():
-    return "home page"
+     return render_template("index-homepage.html")
+
+@app.route("/", methods=['POST', 'GET'])
+def login():
+     if request.method == 'POST':
+        username = request.form['username']
+        if username:
+            return render_template("index-homepage.html")
+        else:
+             message= "Username required!"
+             return render_template("index-login.html", mesg=message)
+     else:
+          return render_template("index-login.html")
+     
+@app.route("/logout", methods = ['POST', 'GET'])
+def logout():
+    if request.method == 'POST':
+        if login:
+            input_data = metal_inputs.query.all()
+            for data in input_data:
+                db.session.delete(data)
+
+            input_data_results = input_results.query.all()
+            for data in input_data_results:
+                db.session.delete(data)
+
+            file_data_results = file_data.query.all()
+            for data in file_data_results:
+                db.session.delete(data)
+        
+            db.session.commit()
+            db.session.close()
+            return render_template("index-login.html")
+    else:
+         return redirect(url_for("#"))
+    
+@app.route("/about_us")
+def about_us():
+     return render_template("index-about-us.html")
+
+@app.route("/contact_us")
+def contact():
+     return render_template("index-contact-us.html")
+
+@app.route("/gis_map")
+def gis_map():
+     return render_template("index-Gis-map.html")
+
+@app.route("/standards")
+def standards():
+     return render_template("index-soil-quality-sta.html")
 
 method = ''
 #INPUT DATA METHOD
-
 @app.route("/input", methods=['POST', 'GET'])
 def input():
     
@@ -159,8 +208,7 @@ def input():
         return redirect (url_for("process_data"))
              
     else:
-        session['input_status'] = ""
-        return render_template("concetration_inputs.html")
+        return render_template("index-soil-prediction.html")
 
           
 @app.route("/process_data")
@@ -220,9 +268,9 @@ def upload():
                 file_name = secure_filename(file.filename)
                 return redirect(url_for('read_file', new_file=file_name))
             else:
-                return render_template('upload.html')
+                return render_template('index-soil-prediction.html')
         else:
-            return render_template('upload.html')
+            return render_template('index-soil-prediction.html')
         
     except RequestEntityTooLarge:
         return "File is too large than the 20MB limit!"

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GROUP 15: CAPSTONE PROJECT</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+</head>
+<body  class="body" style="background-color: rgb(230, 187, 201);">
+
+    <div class="wrapper">
+        <header>
+            <header>
+                <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                    <div class="container">
+                        <h3 class="groupNo">GROUP 15</h3>
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                            <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <div class="collapse navbar-collapse" id="navbarNav">
+                            <ul class="navbar-nav">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('home') }}">Home</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('about_us') }}">About Us</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('input') }}">Soil Prediction</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('standards') }}">Soil Quality Standards</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('gis_map') }}">GIS Map</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ url_for('contact') }}">Contact Us</a>
+                                </li>
+                                <li>
+                                    <form action="{{ url_for('logout') }}" method="POST">
+                                        <input type=submit value="Logout">
+                                    </form>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav>
+            </header>
+   
+    </header>
+    </div>
+
+    <div>
+        <h2>Create an ArcGIS Map </h2>
+        <div class="mapSection">
+            <a href="https://www.arcgis.com/home/index.html" target="_blank">
+                <button type="button" class="btn btn-dark">Click to map</button>
+            </a>
+        </div>
+    </div>
+
+    
+    
+    <div>
+        <footer class="footer">
+            <p>Find us on:</p>
+            
+            <div class="social-icons">
+                <a href="#" class="btn btn-outline-primary btn-lg"><i class="fab fa-linkedin-in"></i></a>
+                <a href="#" class="btn btn-outline-primary btn-lg me-2"><i class="fab fa-facebook-f"></i></a>
+                <a href="#" class="btn btn-outline-info btn-lg me-2"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="btn btn-outline-danger btn-lg me-2"><i class="fab fa-instagram"></i></a>
+            </div>
+    
+            <p>All Rights Reserved | Capstone Project Group 15</p>
+        </footer>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"
+    integrity="sha384-BBtl+eGJRgqQAUMxJ7pMwbEyER4l1g+O15P+16Ep7Q9Q+zqX6gSbd85u4mG4QzX+"
+    crossorigin="anonymous"></script>    
+</body>
+</html>

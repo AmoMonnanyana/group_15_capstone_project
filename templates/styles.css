@@ -1,0 +1,139 @@
+
+header {
+    color: white;
+    padding: 20px;
+}
+
+.custom-navbar {
+    background-color: transparent;
+}
+
+.footer {
+    background-color: palevioletred;
+    color: black;
+    Padding: 0px;
+    text-align: center;
+    margin-top: auto;
+    font-weight: bold;
+    min-height: 20vh;
+}
+
+
+.body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    justify-content: space-between;
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+nav a {
+    text-align: center;
+    color: black;
+    text-decoration: none;
+    font-style:unset;
+    background-color: palevioletred;
+    margin-right: 24px;
+    border-radius:10px;
+    padding: 16px;
+    padding-bottom: 0px;
+    border: 0px;
+    
+}
+
+nav a:hover {
+    background-color: palevioletred;
+}
+
+ .groupNo {
+    margin-right:10px;
+    margin-left: 10px;
+    font-weight: bold;
+    color: rgb(242, 12, 89);
+ }
+
+nav {
+    display: flex;
+}
+
+/* .slogan {
+    text-align: right;
+    color: rgb(242, 12, 89);
+    margin-right: 0px;
+
+} */
+
+/* .soil3.jpeg {
+   width: 200;
+   height: 2;
+} */
+
+.loginSection,.modelSection,.mapSection {
+    display: flex;
+    text-align: center;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    text-decoration: none;
+    background-color: rgb(248, 6, 87);
+    border: 1px solid;
+    /* margin-right:px;
+    border-radius:5px; */
+    padding: 16px;
+    padding-bottom: px;
+    border: 0px;
+}
+
+.loginButton {
+    display: center;
+    font-weight: bold;
+    font-style:unset;
+    cursor: pointer;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    padding: 10px 20px;
+}
+
+.loginButton:hover, .modelButton:hover {
+    background-color: peachpuff;
+}
+
+div, h3 {
+    text-align: center;
+}
+
+label {
+    margin: 10px;
+}
+
+.ConcentrationsButton, .metalConcentrations {
+    margin: 20px;
+}
+
+/* .modelSection {
+    text-align: center;
+    color: black;
+    text-decoration: none;
+    background-color: rgb(248, 6, 87);
+    border: 1px solid;
+    padding: 16px;
+    padding-bottom: 0px;
+    border: 0px;
+    margin: 20px;
+} */
+
+.modelButton {
+        display: center;
+        font-weight: bold;
+        font-style:unset;
+        cursor: pointer;
+        padding-bottom: 10px;
+        margin: 20px;
+        padding: 10px 20px;
+}
+
+.social-icons {
+    /* background-color: rgb(213, 181, 181); */
+    padding: 8px;
+    margin: 8px;
+}
