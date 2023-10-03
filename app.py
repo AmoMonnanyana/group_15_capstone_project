@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, session, jsonify
+from flask import Flask, request, render_template, redirect, url_for, session, jsonify, send_file
 from flask_sqlalchemy import SQLAlchemy
 import tensorflow as tf
 import numpy as np
@@ -14,6 +14,7 @@ from sqlalchemy import REAL
 app = Flask(__name__)
 app.secret_key = "Amo101"
 app.config['UPLOAD_DIRECTORY'] = 'uploads/'
+app.config['DOWNLOAD_DIRECTORY'] = 'downloads/'
 app.config['MAX_CONTENT_LENGTH'] = 20 * 1024 * 1024
 app.config['ALLOWED_EXTENSIONS'] = ['.csv']
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///metals.db"
@@ -329,14 +330,24 @@ def view(mthd):
     elif mthd == 'upload':
          results = file_data.query.all()
 
-    return render_template('view.html', data=results)
+    return render_template('index-view.html', data=results)
 
-    
+@app.route('/download', methods=['GET'])
+def download():
+    data = file_data.query.all()
+
+    # Create a CSV file
+    csv_filename = 'data.csv'
+    with open(csv_filename, 'w', newline='') as csvfile:
+        fieldnames = ['id', 'Latitude', 'Longitude', 'Cd (mg/kg)', 'Cr (mg/kg)', 'Ni (mg/kg)', 'Pb (mg/kg)', 'Zn (mg/kg)', 'Cu (mg/kg)', 'Co (mg/kg)', 'Predicted class']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in data:
+            writer.writerow({'id': row.id, 'Latitude': row.lat,'Longitude': row.long, 'Cd (mg/kg)': row.cd, 'Cr (mg/kg)': row.cr, 'Ni (mg/kg)': row.ni, 'Pb (mg/kg)': row.pb, 'Zn (mg/kg)': row.zn, 'Cu (mg/kg)': row.cu, 'Co (mg/kg)': row.co, 'Predicted class': row.predicted_class})
+
+    # Return the CSV file as a downloadable attachment
+    return send_file(csv_filename, as_attachment=True, download_name='data.csv', mimetype='application/pdf')
+
 if __name__ == " __main__ ": 
     db.create_all()
     app.run(debug=True)
-
-
-#Query children of a parent(example)
-#parent = Parent.query.filter_by(name='John').first()
-#children = parent.children
